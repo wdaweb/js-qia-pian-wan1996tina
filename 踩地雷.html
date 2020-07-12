@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://unpkg.com/pattern.css" rel="stylesheet">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        .background {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fbe6d8;
+            position: relative;
+        }
+
+        #game {
+            margin-top: 200px;
+            width: 0px;
+            height: 0px;
+            z-index: 99;
+            /* background-color: rgb(223, 179, 130); */
+        }
+
+        .square {
+            width: 70px;
+            height: 70px;
+            /* background-color: red; */
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
+            float: left;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* outline: 1px solid #000; */
+            /* border-top: 2px solid #eee;
+            border-right: 2px solid #eee;
+            border-left: 2px solid #bbb;
+            border-bottom: 2px solid #bbb; */
+            transition: 0.5s;
+            margin: 2.5px;
+        }
+
+        .front {
+            width: 97%;
+            height: 97%;
+            position: absolute;
+            background-color: #eee;
+            border-radius: 50%;
+            font-size: 40px;
+            text-align: center;
+            line-height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: auto;
+            box-shadow: 0 5px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        .back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+        .pattern {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            width: 50%;
+            text-align: center;
+            transform: translateX(-50%);
+            color: rgb(255, 212, 212);
+            background-color: rgb(255, 164, 137);
+            font-size: 120px;
+            font-weight: 1200;
+            font-family: fantasy;
+            font-style: italic;
+            letter-spacing: 3px;
+        }
+
+        .wrap {
+            position: absolute;
+            width: 70vw;
+            height: 800px;
+            overflow: hidden;
+        }
+
+        .pz0 {
+            width: 45px;
+            height: 45px;
+
+        }
+
+        .cover {
+            width: 67px;
+            height: 67px;
+        }
+
+        .danger {
+            width: 35px;
+            position: absolute;
+            display: none;
+            z-index: 100;
+        }
+
+        .open {
+            transform: rotateY(0deg);
+        }
+
+        .none {
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <div class="square">
+        <div class="front"></div>
+        <div class="back">111111</div>
+    </div> -->
+    <div class="background">
+        <h1 class="pattern-diagonal-lines-sm text-pattern pattern">Charred Pizza!</h1>
+        <div id="game"></div>
+    </div>
+
+    <script src="./jquery-3.5.0.min.js"></script>
+    <script>
+        $(function () {
+            let x = 9;
+            let j = 0;
+            let c = 1;
+
+
+            for (let i = 0; i < x * x; i++) {
+                $('#game').append(`<div id="sq${i}" class="square a${c}${j}" data-num='0'>
+                    <div class="front"><img src="./pz0.svg" class="pz0"></div>
+                    <div class="back"><img src="./danger.svg" class="danger"><img src="./han.png" class="cover"></div>
+                    </div>`)
+                j++;
+                if (j == x) {
+                    j = 0;
+                }
+                /////////////
+                if ((i + 1) % 9 == 0 && i != 0) {
+                    c++;
+                }
+            }
+            // console.log($('#game').children());
+
+            $('#game').css({ 'width': `${x * 75}px`, 'height': `${x * 75}px` });
+
+            function randsq(n) {
+                return Math.floor(Math.random() * n);
+            }
+
+            ////////    // 行數
+            function findy(n) {
+                if (n < x && n >= 0) {
+                    return 1;
+                } else if (n < x * 2 && n >= x) {
+                    return 2;
+                } else if (n < x * 3 && n >= x * 2) {
+                    return 3;
+                } else if (n < x * 4 && n >= x * 3) {
+                    return 4;
+                } else if (n < x * 5 && n >= x * 4) {
+                    return 5;
+                } else if (n < x * 6 && n >= x * 5) {
+                    return 6;
+                } else if (n < x * 7 && n >= x * 6) {
+                    return 7;
+                } else if (n < x * 8 && n >= x * 7) {
+                    return 8;
+                } else {
+                    return 9;
+                }
+            }
+
+            function writeNum(y, x) {
+                for (let i = y - 1; i <= y + 1; i++) {
+                    for (let j = x - 1; j <= x + 1; j++) {
+                        //////////// 最大值
+                        if (i > 0 && j > -1 && i < 10 && j < 9) {
+                            if (i == y && j == x) {
+                                continue;
+                            }
+                            let t = parseInt($(`.a${i}${j}`).data('num'));
+                            // console.log(typeof t, '🍉');
+                            if (!isNaN(t)) {
+                                t++;
+                                $(`.a${i}${j}`).data('num', t);
+                                $(`.a${i}${j}`).find('.front img').eq(0).attr('src', `./pz${t}.svg`)
+                            }
+
+                            // console.log($(`.a${i}${j}`));
+                        }
+                    }
+                }
+            }
+
+            // 橫的
+            function openByRow(array) {
+
+                for (let i = 0; i < array.length; i++) {
+
+                    // 先開橫排
+                    $(`.a${array[i][0]}${array[i][1]}`).css('transform', 'rotateY(0deg)');
+                    let sq_y = array[i][0];
+                    let sq_x = array[i][1];
+                    // console.log(sq_x, sq_y);
+
+                    let rowDelayTime = 50;
+                    // 開上
+                    for (let j = sq_y; j > 0; j--) {
+                        let sqText = $(`.a${j}${sq_x}`).data('num');
+                        // console.log(!isNaN(parseInt(sqText)));
+
+                        if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                            // $(`.a${j}${sq_x}`).css('transform', 'rotateY(0deg)');
+                            setTimeout(function () {
+                                $(`.a${j}${sq_x}`).addClass('open');
+                            }, rowDelayTime);
+                            break;
+                        } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                            setTimeout(function () {
+                                $(`.a${j}${sq_x}`).addClass('open');
+                            }, rowDelayTime);
+                        }
+                        rowDelayTime += 100;
+                    }
+
+                    // 開下
+                    for (let k = sq_y; k < 10; k++) {
+
+                        let sqText = $(`.a${k}${sq_x}`).data('num');
+                        // console.log(!isNaN(parseInt(sqText)));
+
+                        if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                            // $(`.a${k}${sq_x}`).addClass('open');
+                            setTimeout(function () {
+                                $(`.a${k}${sq_x}`).addClass('open');
+                            }, rowDelayTime);
+                            break;
+                        } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                            // $(`.a${k}${sq_x}`).addClass('open');
+                            setTimeout(function () {
+                                $(`.a${k}${sq_x}`).addClass('open');
+                            }, rowDelayTime);
+                        }
+                        rowDelayTime += 150;
+                    }
+                }
+            }
+
+            // 直的
+            function openByCol(array) {
+                for (let i = 0; i < array.length; i++) {
+
+                    // 開直排
+                    // $(`.a${array[i][0]}${array[i][1]}`).css('transform', 'rotateY(0deg)');
+                    let sq_y = array[i][0];
+                    let sq_x = array[i][1];
+                    // console.log(sq_x, sq_y);
+
+                    let delayTime = 100;
+                    // 開右
+                    for (let j = sq_x; j > 0; j--) {
+                        let sqText = $(`.a${sq_y}${j}`).data('num');
+                        // console.log(!isNaN(parseInt(sqText)));
+
+                        if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                            setTimeout(function () {
+                                $(`.a${sq_y}${j}`).addClass('open');
+                            }, delayTime);
+                            break;
+                        } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                            setTimeout(function () {
+                                $(`.a${sq_y}${j}`).addClass('open');
+                            }, delayTime);
+                        }
+                        delayTime += 100;
+                    }
+
+
+                    // 開左
+                    for (let k = sq_x; k < 10; k++) {
+
+                        let sqText = $(`.a${sq_y}${k}`).data('num');
+                        // console.log(!isNaN(parseInt(sqText)));
+
+                        if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                            // $(`.a${sq_y}${k}`).addClass('open');
+                            setTimeout(function () {
+                                $(`.a${sq_y}${k}`).addClass('open');
+                            }, delayTime);
+                            break;
+                        } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                            setTimeout(function () {
+                                $(`.a${sq_y}${k}`).addClass('open');
+                            }, delayTime);
+                        }
+                        delayTime += 150;
+                    }
+                }
+
+            }
+
+            function clickOpened(array) {
+                for (let i = 0; i < array.length; i++) {
+                    console.log($(`.a${array[i][0]}${array[i][1]}`));
+                    // $(`.a${array[i][0]}${array[i][1]}`).click();
+                }
+            }
+
+            // 產生地雷
+            let boom = [];
+            for (let i = 0; i < x - 1; i++) {
+                ///////////
+                // 9*9 + 從0開始
+                let rand = randsq(80);
+                if (!boom.includes(rand)) {
+                    boom.push(rand);
+                    $(`#sq${rand}`).data('num', '🍉');
+                    $(`#sq${rand}`).find('.front img').eq(0).attr('src', './charred.svg');
+                    let boom_y = findy(rand);
+                    let boom_x = rand % x;
+                    // console.log(boom_y, boom_x);
+                    writeNum(boom_y, boom_x);
+                }
+            }
+            // console.log(boom, 'boom');
+
+
+            $('.square').mousedown(function (e) {
+                if (e.which === 3) {
+                    $(this).find('.back .danger').eq(0).css('display', 'block');
+                    $(this).addClass('none');
+                    if ($(this).data('num') === '🍉' && !$(this).hasClass('open')) {
+                        console.log('aaaaaaaaaaaaaaaaaaaaaaaaa');
+                    }
+                }
+            })
+
+
+            // 當盤子被點擊
+            $('.square').on('click', function () {
+
+                $(this).css('transform', 'rotateY(0deg)');
+
+                // console.log($(this).data('num'));
+
+                if ($(this).data('num') === '🍉') {
+                    for (let i = 0; i < boom.length; i++) {
+                        $(`#sq${boom[i]}`).addClass('open');
+                    }
+                    let delayTime = 100;
+                    for (let i = 0; i < 9; i++) {
+                        for (let k = 1; k < 10; k++) {
+                            setTimeout(function () {
+                                $(`.a${k}${i}`).addClass("open");
+                            }, delayTime);
+                            delayTime += 5;
+                        }
+                    }
+                }
+                // 取出座標(被點的盤子)
+                let sq_y = parseInt($(this).attr('class').substring(8, 9));
+                let sq_x = parseInt($(this).attr('class').substring(9, 10));
+                // console.log(sq_y, sq_x);
+
+                let i = sq_x;
+                let rowarray = [];
+                let colarray = [];
+                let toClicked = [];
+
+                // 找右
+                for (let l = sq_x; l < 9; l++) {
+                    let sqText = $(`.a${sq_y}${l}`).data('num');
+                    // console.log($(`.a${sq_y}${l}`).data('num'));
+
+                    if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                        let sqa = [sq_y, l];
+                        rowarray.push(sqa);
+                        break;
+                    } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                        let sqa = [sq_y, l];
+                        rowarray.push(sqa);
+                    }
+                }
+
+                // 找左
+                for (let l = sq_x; l >= 0; l--) {
+                    let sqText = $(`.a${sq_y}${l}`).data('num');
+
+                    if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                        let sqa = [sq_y, l];
+                        rowarray.push(sqa);
+                        break;
+                    } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                        let sqa = [sq_y, l];
+                        rowarray.push(sqa);
+                    }
+                }
+
+                // 找下
+                for (let l = sq_y; l < 9; l++) {
+                    let sqText = $(`.a${l}${sq_x}`).data('num');
+
+                    if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                        let sqa = [l, sq_x];
+                        colarray.push(sqa);
+                        break;
+                    } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                        let sqa = [l, sq_x];
+                        colarray.push(sqa);
+                    }
+                }
+
+                // 找上
+                for (let l = sq_y; l >= 0; l--) {
+                    let sqText = $(`.a${l}${sq_x}`).data('num');
+
+                    if (parseInt(sqText) > 0 && !isNaN(parseInt(sqText))) {
+                        let sqa = [l, sq_x];
+                        colarray.push(sqa);
+                        break;
+                    } else if (!isNaN(parseInt(sqText)) && sqText == 0) {
+                        let sqa = [l, sq_x];
+                        colarray.push(sqa);
+                    }
+                }
+
+                for (let i = 0; i < 9; i++) {
+                    for (let k = 1; k < 10; k++) {
+                        if ($(`.a${k}${i}`).hasClass("open")) {
+                            let sq = [k, i];
+                            toClicked.push(sq);
+                        }
+                    }
+                }
+
+                // console.log(rowarray);
+                // console.log(colarray);
+
+                openByRow(rowarray);
+                openByCol(colarray);
+                clickOpened(rowarray);
+                clickOpened(colarray);
+            })
+
+
+            $(document).ready(function () {
+                $(document).get(0).oncontextmenu = function () {
+                    return false;
+                };
+            });
+        })
+    </script>
+</body>
+
+</html>
