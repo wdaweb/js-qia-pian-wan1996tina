@@ -133,6 +133,69 @@
         .none {
             pointer-events: none;
         }
+
+        .block {
+            display: block;
+        }
+
+        .d-none {
+            display: none;
+        }
+
+        .boomCount {
+            position: absolute;
+            font-size: 60px;
+            z-index: 999;
+            top: 30%;
+            left: 81%;
+        }
+
+        .pizza {
+            position: absolute;
+            top: 31%;
+            left: 75%;
+        }
+
+        .text {
+            position: absolute;
+            font-size: 60px;
+            z-index: 999;
+            top: 29.5%;
+            left: 79%;
+        }
+
+        .restart {
+            position: absolute;
+            z-index: 9999;
+            width: 45%;
+            height: 45%;
+            background-color: rgb(255, 247, 245);
+            color: rgb(255, 244, 180);
+            border-radius: 30px;
+            display: none;
+        }
+
+        .win {
+            color: coral;
+            font-size: 65px;
+            text-align: center;
+            margin: 120px 0;
+            font-weight: 800;
+        }
+
+        #btn1 {
+            background: rgb(212, 64, 38);
+            outline: none;
+            border: #fff;
+            border-radius: 10px;
+            width: 150px;
+            height: 65px;
+            color: white;
+            font-size: 26px;
+            position: absolute;
+            top: 60%;
+            left: calc(50% - 75px);
+        }
     </style>
 </head>
 
@@ -142,11 +205,22 @@
         <div class="back">111111</div>
     </div> -->
     <div class="background">
+        <img src="./charred.svg" width="60px" height="60px" class="pizza">
+        <span class="boomCount">9</span>
+        <span class="text">:</span>
         <h1 class="pattern-diagonal-lines-sm text-pattern pattern">Charred Pizza!</h1>
         <div id="game"></div>
+        <div class="restart pattern-diagonal-stripes-lg">
+            <p class="win">
+                Congratulations!
+            </p>
+            <button id="btn1">再玩一次</button>
+        </div>
     </div>
 
     <script src="./jquery-3.5.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     <script>
         $(function () {
             let x = 9;
@@ -155,7 +229,7 @@
 
 
             for (let i = 0; i < x * x; i++) {
-                $('#game').append(`<div id="sq${i}" class="square a${c}${j}" data-num='0'>
+                $('#game').append(`<div id="sq${i}" class="square a${c}${j}" data-num='0' data-yx=''>
                     <div class="front"><img src="./pz0.svg" class="pz0"></div>
                     <div class="back"><img src="./danger.svg" class="danger"><img src="./han.png" class="cover"></div>
                     </div>`)
@@ -335,9 +409,11 @@
                 }
             }
 
+
             // 產生地雷
             let boom = [];
-            for (let i = 0; i < x - 1; i++) {
+            let boom_yx = [];
+            while (boom.length <= 8) {
                 ///////////
                 // 9*9 + 從0開始
                 let rand = randsq(80);
@@ -345,24 +421,54 @@
                     boom.push(rand);
                     $(`#sq${rand}`).data('num', '🍉');
                     $(`#sq${rand}`).find('.front img').eq(0).attr('src', './charred.svg');
-                    let boom_y = findy(rand);
-                    let boom_x = rand % x;
+                    const boom_y = findy(rand);
+                    const boom_x = rand % x;
                     // console.log(boom_y, boom_x);
                     writeNum(boom_y, boom_x);
+
+                    const sq_yx = boom_y.toString() + boom_x.toString();
+                    boom_yx.push(sq_yx);
+                    $(`#sq${rand}`).data('yx', sq_yx);
+
                 }
             }
-            // console.log(boom, 'boom');
+            console.log(boom, boom_yx);
 
 
+            // 右鍵插旗
             $('.square').mousedown(function (e) {
                 if (e.which === 3) {
-                    $(this).find('.back .danger').eq(0).css('display', 'block');
-                    $(this).addClass('none');
-                    if ($(this).data('num') === '🍉' && !$(this).hasClass('open')) {
+                    const display = $(this).find('.back .danger').eq(0).css('display');
+                    if (display === 'none') {
+                        $(this).find('.back .danger').eq(0).css('display', 'block');
+                    } else if (display === 'block') {
+                        $(this).find('.back .danger').eq(0).css('display', 'none');
+                    }
+                    // $(this).addClass('none');
+
+                    const sq_y = $(this).attr('class').substring(8, 9);
+                    const sq_x = $(this).attr('class').substring(9, 10);
+                    const yx = sq_y + sq_x;
+                    console.log(yx);
+                    if ($(this).data('yx') === yx) {
                         console.log('aaaaaaaaaaaaaaaaaaaaaaaaa');
+
+                        const found = boom_yx.indexOf(yx);
+                        boom_yx.splice(found, 1);
+                        console.log(boom_yx);
+
+                        let count = parseInt($('.boomCount').text());
+                        count -= 1;
+                        $('.boomCount').text(count);
+
+                        if (count === 0) {
+                            $('.restart').css('display', 'block');
+                            console.log('1111111111111111111111111111');
+                        }
                     }
                 }
             })
+
 
 
             // 當盤子被點擊
@@ -381,10 +487,16 @@
                         for (let k = 1; k < 10; k++) {
                             setTimeout(function () {
                                 $(`.a${k}${i}`).addClass("open");
+                                $(`.a${k}${i}`).addClass("none");
                             }, delayTime);
                             delayTime += 5;
                         }
                     }
+                    setTimeout(() => {
+                        $('.win').text('You lose!');
+                        $('.restart').css({ 'display': 'block' });
+                    }, 6500)
+
                 }
                 // 取出座標(被點的盤子)
                 let sq_y = parseInt($(this).attr('class').substring(8, 9));
@@ -477,6 +589,10 @@
                     return false;
                 };
             });
+
+            $('#btn1').on('click', function () {
+                location.reload();
+            })
         })
     </script>
 </body>
