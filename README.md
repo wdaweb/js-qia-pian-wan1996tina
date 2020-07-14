@@ -1,4 +1,4 @@
 js-qia-pian-wan1996tina
 
-Demo↓
+Demo
 https://wan1996tina.github.io/charred_pizza/
